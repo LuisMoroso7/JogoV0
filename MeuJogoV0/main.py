@@ -6,7 +6,6 @@ from tkinter import messagebox
 from recursos.funcoes import inicializarBancoDeDados, escreverDados
 import json
 
-# Commit 1: Inicialização do pygame, setup da janela e carregamento de assets
 pygame.init()
 inicializarBancoDeDados()
 
@@ -20,12 +19,14 @@ pygame.display.set_icon(icone)
 branco = (255, 255, 255)
 preto = (0, 0, 0)
 
-# Commit 2: Carregamento de imagens, sons e fontes
 eleven = pygame.image.load("assets/eleven.png")
 fundoStart = pygame.image.load("assets/fundoStart.png")
 fundoJogo = pygame.image.load("assets/fundoJogo.png")
 fundoDead = pygame.image.load("assets/fundoVecna.png")
 Vecna = pygame.image.load("assets/vecna.png")
+
+lua_original = pygame.image.load("assets/lua.png").convert_alpha()
+lua = pygame.transform.scale(lua_original, (290, 400))  # Mantendo o tamanho da lua
 
 vecnaSound = pygame.mixer.Sound("assets/vecnaSound.mp3")
 explosaoSound = pygame.mixer.Sound("assets/explosao.wav")
@@ -35,7 +36,6 @@ fontePause = pygame.font.SysFont("comicsans", 32)
 
 pygame.mixer.music.load("assets/kids.mp3")
 
-# Commit 3: Função de pausa com sombra e texto piscante
 def pausar_jogo():
     pausado = True
     contador = 0
@@ -62,7 +62,6 @@ def pausar_jogo():
         relogio.tick(60)
         contador += 1
 
-# Commit 4: Função principal de jogo (jogar)
 def jogar():
     largura_janela = 300
     altura_janela = 50
@@ -138,6 +137,7 @@ def jogar():
         posicaoYPersona = max(0, min(posicaoYPersona, tamanho[1] - alturaPersona))
 
         tela.blit(fundoJogo, (0, 0))
+        tela.blit(lua, (tamanho[0] - 205, -135))  # Lua no canto superior direito
         tela.blit(eleven, (posicaoXPersona, posicaoYPersona))
 
         posicaoYVecna += velocidadeVecna
@@ -162,39 +162,40 @@ def jogar():
         pygame.display.update()
         relogio.tick(60)
 
-# Commit 5: Telas de start e morte (start, dead)
 def start():
-    larguraButtonStart = 150
-    alturaButtonStart = 40
-    larguraButtonQuit = 150
-    alturaButtonQuit = 40
+    larguraButton = 150
+    alturaButton = 40
+    corPadrao = (200, 0, 0)
+    corHover = (255, 50, 50)
+    corTexto = (255, 255, 255)
+    fonteBotao = pygame.font.SysFont("impact", 20)
 
     while True:
+        mouse = pygame.mouse.get_pos()
+        tela.blit(fundoStart, (0, 0))
+
+        startButtonRect = pygame.Rect((10, 10), (larguraButton, alturaButton))
+        corAtualStart = corHover if startButtonRect.collidepoint(mouse) else corPadrao
+        pygame.draw.rect(tela, (50, 0, 0), startButtonRect.inflate(6, 6), border_radius=12)
+        pygame.draw.rect(tela, corAtualStart, startButtonRect, border_radius=12)
+        textoStart = fonteBotao.render("Iniciar Game", True, corTexto)
+        tela.blit(textoStart, textoStart.get_rect(center=startButtonRect.center))
+
+        quitButtonRect = pygame.Rect((10, 60), (larguraButton, alturaButton))
+        corAtualQuit = corHover if quitButtonRect.collidepoint(mouse) else corPadrao
+        pygame.draw.rect(tela, (50, 0, 0), quitButtonRect.inflate(6, 6), border_radius=12)
+        pygame.draw.rect(tela, corAtualQuit, quitButtonRect, border_radius=12)
+        textoQuit = fonteBotao.render("Sair do Game", True, corTexto)
+        tela.blit(textoQuit, textoQuit.get_rect(center=quitButtonRect.center))
+
         for evento in pygame.event.get():
             if evento.type == pygame.QUIT:
                 quit()
-            elif evento.type == pygame.MOUSEBUTTONDOWN:
-                if startButton.collidepoint(evento.pos):
-                    larguraButtonStart = 140
-                    alturaButtonStart = 35
-                if quitButton.collidepoint(evento.pos):
-                    larguraButtonQuit = 140
-                    alturaButtonQuit = 35
-            elif evento.type == pygame.MOUSEBUTTONUP:
-                if startButton.collidepoint(evento.pos):
+            if evento.type == pygame.MOUSEBUTTONUP:
+                if startButtonRect.collidepoint(evento.pos):
                     jogar()
-                if quitButton.collidepoint(evento.pos):
+                if quitButtonRect.collidepoint(evento.pos):
                     quit()
-
-        tela.blit(fundoStart, (0, 0))
-
-        startButton = pygame.draw.rect(tela, branco, (10, 10, larguraButtonStart, alturaButtonStart), border_radius=15)
-        startTexto = fonteMenu.render("Iniciar Game", True, preto)
-        tela.blit(startTexto, (25, 12))
-
-        quitButton = pygame.draw.rect(tela, branco, (10, 60, larguraButtonQuit, alturaButtonQuit), border_radius=15)
-        quitTexto = fonteMenu.render("Sair do Game", True, preto)
-        tela.blit(quitTexto, (25, 62))
 
         pygame.display.update()
         relogio.tick(60)
@@ -221,4 +222,3 @@ def dead():
     start()
 
 start()
-
