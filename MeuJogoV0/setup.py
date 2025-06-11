@@ -3,7 +3,7 @@ import cx_Freeze
 from cx_Freeze import setup, Executable
 
 # Lista de arquivos a incluir
-incluir_arquivos = ["assets", "base.stranger", "recursos"]
+incluir_arquivos = ["assets", "log.data", "recursos"]
 
 # Definições da build
 build_exe_options = {

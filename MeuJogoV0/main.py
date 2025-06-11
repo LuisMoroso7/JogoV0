@@ -1,10 +1,13 @@
 import pygame
 import random
 import os
+import math
 import tkinter as tk
 from tkinter import messagebox
 from recursos.funcoes import inicializarBancoDeDados, escreverDados
+from recursos.extras import exibir_creditos
 import json
+from datetime import datetime
 
 pygame.init()
 inicializarBancoDeDados()
@@ -18,7 +21,9 @@ pygame.display.set_icon(icone)
 
 branco = (255, 255, 255)
 preto = (0, 0, 0)
+vermelho_escuro = (150, 0, 0)
 
+# Imagens
 eleven = pygame.image.load("assets/eleven.png")
 fundoStart = pygame.image.load("assets/fundoStart.png")
 fundoJogo = pygame.image.load("assets/fundoJogo.png")
@@ -26,15 +31,72 @@ fundoDead = pygame.image.load("assets/fundoVecna.png")
 Vecna = pygame.image.load("assets/vecna.png")
 
 lua_original = pygame.image.load("assets/lua.png").convert_alpha()
-lua = pygame.transform.scale(lua_original, (290, 400))  # Mantendo o tamanho da lua
+lua = pygame.transform.scale(lua_original, (290, 400))
 
+# Sons e fontes
 vecnaSound = pygame.mixer.Sound("assets/vecnaSound.mp3")
 explosaoSound = pygame.mixer.Sound("assets/explosao.wav")
 fonteMenu = pygame.font.SysFont("comicsans", 18)
 fonteMorte = pygame.font.SysFont("arial", 120)
 fontePause = pygame.font.SysFont("comicsans", 32)
+fonteGameOver = pygame.font.SysFont("impact", 72)
+fonteBoasVindas = pygame.font.SysFont("comicsans", 30)
 
 pygame.mixer.music.load("assets/kids.mp3")
+
+exibir_creditos(tela, tamanho, fonteMenu)
+
+nome = ""
+
+
+def tela_boas_vindas():
+    exibir = True
+    while exibir:
+        tela.blit(fundoStart, (0, 0))
+
+        titulo = fonteGameOver.render("Bem-vindo, " + nome, True, vermelho_escuro)
+        subtitulo = fonteBoasVindas.render("Use as setas para mover. Evite o Vecna!", True, branco)
+        botao = pygame.Rect(tamanho[0] // 2 - 100, tamanho[1] // 2, 200, 50)
+
+        pygame.draw.rect(tela, (200, 0, 0), botao, border_radius=10)
+        texto_botao = fonteBoasVindas.render("Começar", True, branco)
+        tela.blit(titulo, titulo.get_rect(center=(tamanho[0] // 2, 150)))
+        tela.blit(subtitulo, subtitulo.get_rect(center=(tamanho[0] // 2, 220)))
+        tela.blit(texto_botao, texto_botao.get_rect(center=botao.center))
+
+        for evento in pygame.event.get():
+            if evento.type == pygame.QUIT:
+                quit()
+            elif evento.type == pygame.MOUSEBUTTONDOWN:
+                if botao.collidepoint(evento.pos):
+                    exibir = False
+
+        pygame.display.update()
+        relogio.tick(60)
+
+def escreverDados(nome, pontos):
+    try:
+        with open("base.stranger", "r") as f:
+            dados = json.load(f)
+    except:
+        dados = {}
+
+    data = datetime.now().strftime("%d/%m/%Y %H:%M:%S")
+    dados[nome] = [pontos, data]
+
+    with open("base.stranger", "w") as f:
+        json.dump(dados, f)
+
+def atualizar_lua_pulsante(escala_base, frame):
+    fator = 1 + 0.05 * pygame.math.sin(frame * 0.1)
+    nova_escala = (int(escala_base[0] * fator), int(escala_base[1] * fator))
+    return pygame.transform.scale(lua_original, nova_escala)
+
+morcego = pygame.Rect(random.randint(0, tamanho[0]), random.randint(0, tamanho[1]), 30, 30)
+morcego_vel = [random.choice([-2, 2]), random.choice([-2, 2])]
+
+movimento_direcao = None
+
 
 def pausar_jogo():
     pausado = True
@@ -61,6 +123,7 @@ def pausar_jogo():
         pygame.display.update()
         relogio.tick(60)
         contador += 1
+
 
 def jogar():
     largura_janela = 300
@@ -90,6 +153,9 @@ def jogar():
     botao.pack()
     root.mainloop()
 
+    tela_boas_vindas()
+
+    global movimento_direcao
     posicaoXPersona = 400
     posicaoYPersona = 300
     movimentoXPersona = 0
@@ -97,14 +163,13 @@ def jogar():
     posicaoXVecna = 400
     posicaoYVecna = -240
     velocidadeVecna = 1
-
     larguraPersona = 125
     alturaPersona = 188
     larguraVecna = 120
     alturaVecna = 180
-
     dificuldade = 30
     pontos = 0
+    frame = 0
 
     pygame.mixer.Sound.play(vecnaSound)
     pygame.mixer.music.play(-1)
@@ -114,21 +179,29 @@ def jogar():
             if evento.type == pygame.QUIT:
                 quit()
             elif evento.type == pygame.KEYDOWN:
-                if evento.key == pygame.K_RIGHT:
+                if evento.key == pygame.K_RIGHT and movimento_direcao != 'y':
                     movimentoXPersona = 15
-                elif evento.key == pygame.K_LEFT:
+                    movimentoYPersona = 0
+                    movimento_direcao = 'x'
+                elif evento.key == pygame.K_LEFT and movimento_direcao != 'y':
                     movimentoXPersona = -15
-                elif evento.key == pygame.K_UP:
+                    movimentoYPersona = 0
+                    movimento_direcao = 'x'
+                elif evento.key == pygame.K_UP and movimento_direcao != 'x':
                     movimentoYPersona = -15
-                elif evento.key == pygame.K_DOWN:
+                    movimentoXPersona = 0
+                    movimento_direcao = 'y'
+                elif evento.key == pygame.K_DOWN and movimento_direcao != 'x':
                     movimentoYPersona = 15
+                    movimentoXPersona = 0
+                    movimento_direcao = 'y'
                 elif evento.key == pygame.K_SPACE:
                     pausar_jogo()
             elif evento.type == pygame.KEYUP:
-                if evento.key in [pygame.K_LEFT, pygame.K_RIGHT]:
+                if evento.key in [pygame.K_LEFT, pygame.K_RIGHT, pygame.K_UP, pygame.K_DOWN]:
                     movimentoXPersona = 0
-                elif evento.key in [pygame.K_UP, pygame.K_DOWN]:
                     movimentoYPersona = 0
+                    movimento_direcao = None
 
         posicaoXPersona += movimentoXPersona
         posicaoYPersona += movimentoYPersona
@@ -136,9 +209,22 @@ def jogar():
         posicaoXPersona = max(0, min(posicaoXPersona, tamanho[0] - larguraPersona))
         posicaoYPersona = max(0, min(posicaoYPersona, tamanho[1] - alturaPersona))
 
+        # Atualiza morcego
+        morcego.x += morcego_vel[0]
+        morcego.y += morcego_vel[1]
+        if morcego.left < 0 or morcego.right > tamanho[0]:
+            morcego_vel[0] *= -1
+        if morcego.top < 0 or morcego.bottom > tamanho[1]:
+            morcego_vel[1] *= -1
+
+        # Atualiza lua com efeito pulsante
+        lua_atualizada = atualizar_lua_pulsante((290, 400), frame)
+        frame += 1
+
         tela.blit(fundoJogo, (0, 0))
-        tela.blit(lua, (tamanho[0] - 205, -135))  # Lua no canto superior direito
+        tela.blit(lua_atualizada, (tamanho[0] - 205, -135))
         tela.blit(eleven, (posicaoXPersona, posicaoYPersona))
+        pygame.draw.ellipse(tela, (100, 100, 100), morcego)
 
         posicaoYVecna += velocidadeVecna
         if posicaoYVecna > tamanho[1]:
@@ -150,7 +236,7 @@ def jogar():
 
         tela.blit(Vecna, (posicaoXVecna, posicaoYVecna))
 
-        texto = fonteMenu.render("Pontos: " + str(pontos), True, branco)
+        texto = fonteMenu.render("Pontos: " + str(pontos) + "  |  Press SPACE to Pause Game", True, branco)
         tela.blit(texto, (15, 15))
 
         if (set(range(posicaoYVecna, posicaoYVecna + alturaVecna)).intersection(range(posicaoYPersona, posicaoYPersona + alturaPersona))
@@ -162,67 +248,6 @@ def jogar():
         pygame.display.update()
         relogio.tick(60)
 
-def start():
-    larguraButton = 150
-    alturaButton = 40
-    corPadrao = (200, 0, 0)
-    corHover = (255, 50, 50)
-    corTexto = (255, 255, 255)
-    fonteBotao = pygame.font.SysFont("impact", 20)
-
-    while True:
-        mouse = pygame.mouse.get_pos()
-        tela.blit(fundoStart, (0, 0))
-
-        startButtonRect = pygame.Rect((10, 10), (larguraButton, alturaButton))
-        corAtualStart = corHover if startButtonRect.collidepoint(mouse) else corPadrao
-        pygame.draw.rect(tela, (50, 0, 0), startButtonRect.inflate(6, 6), border_radius=12)
-        pygame.draw.rect(tela, corAtualStart, startButtonRect, border_radius=12)
-        textoStart = fonteBotao.render("Iniciar Game", True, corTexto)
-        tela.blit(textoStart, textoStart.get_rect(center=startButtonRect.center))
-
-        quitButtonRect = pygame.Rect((10, 60), (larguraButton, alturaButton))
-        corAtualQuit = corHover if quitButtonRect.collidepoint(mouse) else corPadrao
-        pygame.draw.rect(tela, (50, 0, 0), quitButtonRect.inflate(6, 6), border_radius=12)
-        pygame.draw.rect(tela, corAtualQuit, quitButtonRect, border_radius=12)
-        textoQuit = fonteBotao.render("Sair do Game", True, corTexto)
-        tela.blit(textoQuit, textoQuit.get_rect(center=quitButtonRect.center))
-
-        for evento in pygame.event.get():
-            if evento.type == pygame.QUIT:
-                quit()
-            if evento.type == pygame.MOUSEBUTTONUP:
-                if startButtonRect.collidepoint(evento.pos):
-                    jogar()
-                if quitButtonRect.collidepoint(evento.pos):
-                    quit()
-
-        pygame.display.update()
-        relogio.tick(60)
-
-def dead():
-    pygame.mixer.music.fadeout(1000)
-    pygame.mixer.Sound.play(explosaoSound)
-
-    tela.blit(fundoDead, (0, 0))  # Exibe o fundo da morte
-    pygame.display.update()
-    pygame.time.wait(1000)  # Espera 1 segundo para garantir que apareça
-
-    root = tk.Tk()
-    root.title("Tela da Morte")
-
-    label = tk.Label(root, text="Log das Partidas", font=("Arial", 16))
-    label.pack(pady=10)
-
-    listbox = tk.Listbox(root, width=50, height=10, selectmode=tk.SINGLE)
-    listbox.pack(pady=20)
-
-    log_partidas = open("base.stranger", "r").read()
-    log_partidas = json.loads(log_partidas)
-    for chave in log_partidas:
-        listbox.insert(tk.END, f"Pontos: {log_partidas[chave][0]} na data: {log_partidas[chave][1]} - Nickname: {chave}")
-
-    root.mainloop()
-    start()
-
+start = jogar  # Define start como jogar para manter compatibilidade com chamadas existentes
 start()
+
