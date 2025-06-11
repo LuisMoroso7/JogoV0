@@ -185,10 +185,10 @@ def jogar():
     posicaoXVecna = 400
     posicaoYVecna = -240
     velocidadeVecna = 1
-    larguraPersona = 125
-    alturaPersona = 188
-    larguraVecna = 120
-    alturaVecna = 180
+    larguraPersona = 57
+    alturaPersona = 147
+    larguraVecna = 86
+    alturaVecna = 201
     dificuldade = 30
     pontos = 0
     frame = 0

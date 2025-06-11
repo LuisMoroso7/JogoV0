@@ -3,7 +3,7 @@ import cx_Freeze
 from cx_Freeze import setup, Executable
 
 # Lista de arquivos a incluir
-incluir_arquivos = ["assets", "log.data", "recursos"]
+incluir_arquivos = [ "log.data", "recursos"]
 
 # Definições da build
 build_exe_options = {
@@ -14,7 +14,7 @@ build_exe_options = {
 executaveis = [
     Executable(
         script="main.py",
-        icon="assets/icone.png",
+        icon="recursos/assets/icone.png",
         base=None
     )
 ]
