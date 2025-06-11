@@ -1,5 +1,5 @@
 # pip install cx_freeze
-import cx_Freeze
+import cx_freeze
 from cx_Freeze import setup, Executable
 
 # Lista de arquivos a incluir
