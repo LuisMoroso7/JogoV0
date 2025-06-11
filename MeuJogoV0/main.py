@@ -201,8 +201,12 @@ def start():
         relogio.tick(60)
 
 def dead():
-    pygame.mixer.music.stop()
+    pygame.mixer.music.fadeout(1000)
     pygame.mixer.Sound.play(explosaoSound)
+
+    tela.blit(fundoDead, (0, 0))  # Exibe o fundo da morte
+    pygame.display.update()
+    pygame.time.wait(1000)  # Espera 1 segundo para garantir que apareça
 
     root = tk.Tk()
     root.title("Tela da Morte")
@@ -213,7 +217,7 @@ def dead():
     listbox = tk.Listbox(root, width=50, height=10, selectmode=tk.SINGLE)
     listbox.pack(pady=20)
 
-    log_partidas = open("base.atitus", "r").read()
+    log_partidas = open("base.stranger", "r").read()
     log_partidas = json.loads(log_partidas)
     for chave in log_partidas:
         listbox.insert(tk.END, f"Pontos: {log_partidas[chave][0]} na data: {log_partidas[chave][1]} - Nickname: {chave}")

@@ -10,29 +10,26 @@ def aguarde(segundos):
     time.sleep(segundos)
     
 def inicializarBancoDeDados():
-    # r - read, w - write, a - append
     try:
-        banco = open("base.atitus","r")
+        banco = open("base.stranger", "r")
+        banco.close()
     except:
         print("Banco de Dados Inexistente. Criando...")
-        banco = open("base.atitus","w")
+        with open("base.stranger", "w") as banco:
+            banco.write("{}")
     
 def escreverDados(nome, pontos):
-    # INI - inserindo no arquivo
-    banco = open("base.atitus","r")
-    dados = banco.read()
-    banco.close()
-    print("dados",type(dados))
-    if dados != "":
-        dadosDict = json.loads(dados)
-    else:
+    try:
+        with open("base.stranger", "r") as banco:
+            dados = banco.read()
+            dadosDict = json.loads(dados) if dados.strip() else {}
+    except (FileNotFoundError, json.JSONDecodeError):
         dadosDict = {}
-        
+
     data_br = datetime.now().strftime("%d/%m/%Y")
     dadosDict[nome] = (pontos, data_br)
-    
-    banco = open("base.atitus","w")
-    banco.write(json.dumps(dadosDict))
-    banco.close()
+
+    with open("base.stranger", "w") as banco:
+        banco.write(json.dumps(dadosDict))
     
     # END - inserindo no arquivo
