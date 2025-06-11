@@ -14,3 +14,8 @@ Tecnologias utilizadas:
  datetime,
  speech_recognition, 
  pyttsx3.
+
+👾 Colaborador
+Testador do Jogo: João Paulo Pasolini
+
+RA: 1138273
